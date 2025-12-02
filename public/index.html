@@ -742,9 +742,11 @@
     }
   });
 
-  // Initialize - always load comments, regardless of login status
-  loadComments();
-  checkAuthAndUpdateUI();
+  // Initialize: first detect user, then load comments (so reply forms work correctly)
+  (async function init() {
+    await checkAuthAndUpdateUI();
+    await loadComments();
+  })();
 </script>
 
 </body>
