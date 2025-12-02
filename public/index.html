@@ -444,7 +444,7 @@
     }
   }
 
-  // Load comments from server
+  // Load comments from server (only approved comments and replies)
   async function loadComments() {
     try {
       const res = await fetch('/api/comments', {
@@ -482,8 +482,27 @@
         commentsList.appendChild(emptyP);
         return;
       }
-      
+
+      // Build simple thread structure: top-level comments and their replies
+      const roots = comments.filter(c => !c.parentId);
+      const repliesByParent = new Map();
       comments.forEach(c => {
+        if (c.parentId) {
+          if (!repliesByParent.has(c.parentId)) {
+            repliesByParent.set(c.parentId, []);
+          }
+          repliesByParent.get(c.parentId).push(c);
+        }
+      });
+
+      const sortByDateDesc = (a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bTime - aTime;
+      };
+
+      roots.sort(sortByDateDesc);
+      roots.forEach(root => {
         const commentItem = document.createElement('div');
         commentItem.style.padding = '1rem';
         commentItem.style.borderBottom = '1px solid #fad761';
@@ -497,16 +516,54 @@
         username.style.color = '#d97706';
         username.style.marginBottom = '0.5rem';
         // Security: Use textContent to prevent XSS
-        username.textContent = (c.username || 'کاربر ناشناس').substring(0, 50);
+        const rootRole = root.authorRole === 'admin' ? ' (ادمین)' : ' (کاربر)';
+        username.textContent = (root.username || 'کاربر ناشناس').substring(0, 50) + rootRole;
         
         const commentText = document.createElement('div');
         commentText.style.fontWeight = '600';
         commentText.style.lineHeight = '1.6';
         // Security: Use textContent to prevent XSS attacks
-        commentText.textContent = c.comment;
+        commentText.textContent = root.comment;
         
         commentItem.appendChild(username);
         commentItem.appendChild(commentText);
+
+        // Replies (if any)
+        const replies = (repliesByParent.get(root.id) || []).sort(sortByDateDesc);
+        if (replies.length > 0) {
+          const repliesContainer = document.createElement('div');
+          repliesContainer.style.marginTop = '0.75rem';
+          repliesContainer.style.paddingRight = '0.75rem';
+          repliesContainer.style.borderRight = '3px solid #fbbf24';
+
+          replies.forEach(reply => {
+            const replyBox = document.createElement('div');
+            replyBox.style.marginBottom = '0.5rem';
+            replyBox.style.background = '#fff3cd';
+            replyBox.style.borderRadius = '8px';
+            replyBox.style.padding = '0.6rem 0.75rem';
+
+            const replyHeader = document.createElement('div');
+            replyHeader.style.fontWeight = '700';
+            replyHeader.style.fontSize = '0.9rem';
+            replyHeader.style.marginBottom = '0.25rem';
+
+            const roleLabel = reply.authorRole === 'admin' ? 'ادمین' : 'کاربر';
+            replyHeader.textContent = `${(reply.username || 'کاربر ناشناس').substring(0, 50)} (${roleLabel})`;
+
+            const replyText = document.createElement('div');
+            replyText.style.fontSize = '0.9rem';
+            replyText.style.lineHeight = '1.5';
+            replyText.textContent = reply.comment;
+
+            replyBox.appendChild(replyHeader);
+            replyBox.appendChild(replyText);
+            repliesContainer.appendChild(replyBox);
+          });
+
+          commentItem.appendChild(repliesContainer);
+        }
+
         commentsList.appendChild(commentItem);
       });
     } catch (error) {
