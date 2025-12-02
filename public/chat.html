@@ -7,6 +7,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet" />
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Vazirmatn', sans-serif;
       background-color: #fff8dc;
@@ -16,6 +19,7 @@
       align-items: center;
       min-height: 100vh;
       padding: 1rem;
+      overflow-x: hidden;
     }
     #chatContainer {
       display: flex;
@@ -23,6 +27,7 @@
       width: 100%;
       max-width: 600px;
       height: 90vh;
+      max-height: 700px;
       background: #fff9e6;
       border-radius: 16px;
       box-shadow: 0 12px 28px rgba(250,215,97,0.4);
