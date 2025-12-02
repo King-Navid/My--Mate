@@ -324,7 +324,7 @@
 
     async function loadComments() {
       try {
-        const res = await fetch("/api/comments", {
+        const res = await fetch("/api/admin/comments", {
           credentials: "include",
         });
         if (res.status === 401 || res.status === 403) {
@@ -333,9 +333,11 @@
         }
         const comments = await res.json();
 
-        if (!comments || comments.length === 0) {
-          // Security: Use textContent to prevent XSS
-          commentsContainer.innerHTML = '';
+        commentsContainer.innerHTML = "";
+        commentsContainer.style.flexDirection = "column";
+        commentsContainer.style.gap = "1.5rem";
+
+        if (!Array.isArray(comments) || comments.length === 0) {
           const emptyP = document.createElement('p');
           emptyP.className = 'text-yellow-900 text-center';
           emptyP.textContent = 'هیچ نظری وجود ندارد.';
@@ -343,30 +345,51 @@
           return;
         }
 
-        commentsContainer.innerHTML = "";
-        commentsContainer.style.flexDirection = "column";
-        commentsContainer.style.gap = "1.5rem";
+        const roots = comments.filter(c => !c.parentId);
+        const repliesByParent = new Map();
+        comments.forEach(c => {
+          if (c.parentId) {
+            if (!repliesByParent.has(c.parentId)) {
+              repliesByParent.set(c.parentId, []);
+            }
+            repliesByParent.get(c.parentId).push(c);
+          }
+        });
 
-        for (const comment of comments) {
+        const sortByDateDesc = (a, b) => {
+          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return bTime - aTime;
+        };
+
+        roots.sort(sortByDateDesc);
+
+        for (const comment of roots) {
           const block = document.createElement("div");
           block.className = "comment-block";
 
-          // Header with username and delete button
           const header = document.createElement("div");
           header.className = "comment-header";
 
-          // Security: Use textContent to prevent XSS
           const usernameDiv = document.createElement("div");
           usernameDiv.className = "comment-username";
           usernameDiv.textContent = (comment.username || "کاربر ناشناس").substring(0, 50);
           header.appendChild(usernameDiv);
+
+          const metaDiv = document.createElement("div");
+          metaDiv.style.fontSize = "0.8rem";
+          metaDiv.style.color = "#4b5563";
+          const roleLabel = comment.authorRole === "admin" ? "ادمین" : "کاربر";
+          const statusLabel = comment.approved ? "تأیید شده" : "در انتظار تأیید";
+          metaDiv.textContent = `${roleLabel} • ${statusLabel}`;
+          header.appendChild(metaDiv);
 
           const deleteBtn = document.createElement("button");
           deleteBtn.className = "delete-btn";
           deleteBtn.textContent = "حذف";
           deleteBtn.setAttribute("aria-label", `حذف نظر ${comment.id}`);
           deleteBtn.onclick = async () => {
-            if (!confirm(`آیا مطمئن هستید که می‌خواهید این نظر را حذف کنید؟`)) {
+            if (!confirm(`آیا مطمئن هستید که می‌خواهید این نظر و پاسخ‌های آن را حذف کنید؟`)) {
               return;
             }
 
@@ -395,13 +418,11 @@
 
           block.appendChild(header);
 
-          // Comment text - Security: Use textContent to prevent XSS
           const textDiv = document.createElement("div");
           textDiv.className = "comment-text";
           textDiv.textContent = comment.comment;
           block.appendChild(textDiv);
 
-          // Date (if available)
           if (comment.createdAt) {
             const dateDiv = document.createElement("div");
             dateDiv.className = "comment-date";
@@ -409,6 +430,157 @@
             dateDiv.textContent = `تاریخ: ${date.toLocaleDateString('fa-IR')} ${date.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}`;
             block.appendChild(dateDiv);
           }
+
+          // Approve button for pending comments
+          if (!comment.approved) {
+            const approveBtn = document.createElement("button");
+            approveBtn.className = "reply-btn";
+            approveBtn.textContent = "تأیید نظر";
+            approveBtn.style.marginTop = "0.5rem";
+            approveBtn.onclick = async () => {
+              approveBtn.disabled = true;
+              approveBtn.textContent = "در حال تأیید...";
+              try {
+                const response = await fetch(`/api/admin/comments/${comment.id}/approve`, {
+                  method: "POST",
+                  credentials: "include",
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                  alert(data.error || "خطا در تأیید نظر.");
+                } else {
+                  loadComments();
+                }
+              } catch {
+                alert("خطا در تأیید نظر.");
+              } finally {
+                approveBtn.disabled = false;
+                approveBtn.textContent = "تأیید نظر";
+              }
+            };
+            block.appendChild(approveBtn);
+          }
+
+          // Replies list
+          const replies = (repliesByParent.get(comment.id) || []).sort(sortByDateDesc);
+          if (replies.length > 0) {
+            const repliesContainer = document.createElement("div");
+            repliesContainer.style.marginTop = "0.75rem";
+            repliesContainer.style.paddingRight = "0.75rem";
+            repliesContainer.style.borderRight = "3px solid #fbbf24";
+
+            for (const reply of replies) {
+              const replyBox = document.createElement("div");
+              replyBox.style.marginBottom = "0.5rem";
+              replyBox.style.background = "#fff3cd";
+              replyBox.style.borderRadius = "8px";
+              replyBox.style.padding = "0.6rem 0.75rem";
+
+              const replyHeader = document.createElement("div");
+              replyHeader.style.display = "flex";
+              replyHeader.style.justifyContent = "space-between";
+              replyHeader.style.alignItems = "center";
+
+              const replyUser = document.createElement("div");
+              replyUser.style.fontWeight = "700";
+              replyUser.style.fontSize = "0.9rem";
+              const replyRole = reply.authorRole === "admin" ? "ادمین" : "کاربر";
+              replyUser.textContent = `${(reply.username || "کاربر ناشناس").substring(0, 50)} (${replyRole})`;
+
+              const replyStatus = document.createElement("span");
+              replyStatus.style.fontSize = "0.8rem";
+              replyStatus.style.color = "#4b5563";
+              replyStatus.textContent = reply.approved ? "تأیید شده" : "در انتظار تأیید";
+
+              replyHeader.appendChild(replyUser);
+              replyHeader.appendChild(replyStatus);
+
+              const replyText = document.createElement("div");
+              replyText.style.fontSize = "0.9rem";
+              replyText.style.lineHeight = "1.5";
+              replyText.textContent = reply.comment;
+
+              replyBox.appendChild(replyHeader);
+              replyBox.appendChild(replyText);
+
+              // Approve button for pending replies
+              if (!reply.approved) {
+                const approveReplyBtn = document.createElement("button");
+                approveReplyBtn.className = "reply-btn";
+                approveReplyBtn.textContent = "تأیید پاسخ";
+                approveReplyBtn.style.marginTop = "0.4rem";
+                approveReplyBtn.onclick = async () => {
+                  approveReplyBtn.disabled = true;
+                  approveReplyBtn.textContent = "در حال تأیید...";
+                  try {
+                    const response = await fetch(`/api/admin/comments/${reply.id}/approve`, {
+                      method: "POST",
+                      credentials: "include",
+                    });
+                    const data = await response.json();
+                    if (!response.ok) {
+                      alert(data.error || "خطا در تأیید پاسخ.");
+                    } else {
+                      loadComments();
+                    }
+                  } catch {
+                    alert("خطا در تأیید پاسخ.");
+                  } finally {
+                    approveReplyBtn.disabled = false;
+                    approveReplyBtn.textContent = "تأیید پاسخ";
+                  }
+                };
+                replyBox.appendChild(approveReplyBtn);
+              }
+
+              repliesContainer.appendChild(replyBox);
+            }
+
+            block.appendChild(repliesContainer);
+          }
+
+          // Reply textarea for admin
+          const replyTextarea = document.createElement("textarea");
+          replyTextarea.placeholder = "پاسخ خود را به این نظر اینجا بنویسید...";
+          replyTextarea.style.marginTop = "0.75rem";
+          block.appendChild(replyTextarea);
+
+          const replyBtn = document.createElement("button");
+          replyBtn.className = "reply-btn";
+          replyBtn.textContent = "ارسال پاسخ";
+          replyBtn.style.marginTop = "0.4rem";
+          replyBtn.onclick = async () => {
+            const replyText = replyTextarea.value.trim();
+            if (!replyText) {
+              alert("لطفاً متن پاسخ را وارد کنید.");
+              return;
+            }
+
+            replyBtn.disabled = true;
+            replyBtn.textContent = "در حال ارسال...";
+            try {
+              const response = await fetch("/api/comments", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ comment: replyText, parentId: comment.id }),
+              });
+              const data = await response.json();
+              if (!response.ok) {
+                alert(data.error || "خطا در ارسال پاسخ.");
+              } else {
+                replyTextarea.value = "";
+                loadComments();
+              }
+            } catch {
+              alert("خطا در ارسال پاسخ.");
+            } finally {
+              replyBtn.disabled = false;
+              replyBtn.textContent = "ارسال پاسخ";
+            }
+          };
+
+          block.appendChild(replyBtn);
 
           commentsContainer.appendChild(block);
         }
