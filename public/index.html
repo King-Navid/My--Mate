@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Mate - همراه هوشمند لیست خرید</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background: #fff8dc;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #5a4d0e;
+    }
+    header {
+      background: #fad761;
+      width: 100%;
+      box-shadow: 0 8px 20px rgba(250,215,97,0.4);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      direction: ltr;
+    }
+    h1.site-title {
+      font-weight: 900;
+      font-size: 2.5rem;
+      user-select: none;
+      color: black;
+      margin: 0;
+      text-align: left;
+      flex-grow: 0;
+    }
+    .nav-buttons {
+      display: flex;
+      gap: 1rem;
+      direction: rtl;
+      flex-wrap: wrap;
+    }
+    nav a {
+      font-weight: 600;
+      font-size: 1.1rem;
+      text-decoration: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+      user-select: none;
+      white-space: nowrap;
+      color: black;
+    }
+    .btn-auth {
+      background-color: black;
+      color: #fad761;
+      font-weight: 700;
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-auth:hover {
+      background-color: #e0b92a;
+      color: black;
+    }
+
+    main.container {
+      max-width: 900px;
+      width: 100%;
+      padding: 2rem 1rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    section.text-center {
+      text-align: center;
+      max-width: 720px;
+      margin-bottom: 4rem;
+    }
+    section.text-center h2 {
+      color: #d97706;
+      font-weight: 900;
+      font-size: 2.8rem;
+      text-shadow: 1px 1px 2px #b06e00;
+      margin-bottom: 1rem;
+    }
+    section.text-center p {
+      font-size: 1.3rem;
+      line-height: 1.6;
+      letter-spacing: 0.6px;
+      color: #5a4d0e;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      nav {
+        padding: 1rem 0.75rem;
+        flex-wrap: wrap;
+      }
+      h1.site-title {
+        font-size: 1.75rem;
+      }
+      .nav-buttons {
+        gap: 0.5rem;
+      }
+      .btn-auth {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.9rem;
+      }
+      main.container {
+        padding: 1.5rem 0.75rem;
+      }
+      section.text-center {
+        margin-bottom: 2.5rem;
+      }
+      section.text-center h2 {
+        font-size: 1.8rem;
+      }
+      section.text-center p {
+        font-size: 1.1rem;
+        padding: 0 0.5rem;
+      }
+      section.features {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      .feature-card {
+        padding: 1.5rem 1.25rem;
+      }
+      .feature-card h3 {
+        font-size: 1.2rem;
+      }
+      section#comments {
+        margin-top: 4rem;
+      }
+      section#comments h3 {
+        font-size: 1.5rem;
+      }
+      form#commentForm {
+        padding: 1.5rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      nav {
+        padding: 0.75rem 0.5rem;
+      }
+      h1.site-title {
+        font-size: 1.5rem;
+      }
+      .btn-auth {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.85rem;
+      }
+      section.text-center h2 {
+        font-size: 1.5rem;
+      }
+      section.text-center p {
+        font-size: 1rem;
+      }
+      section.text-center button {
+        padding: 0.7rem 1.5rem;
+        font-size: 0.9rem;
+      }
+      .feature-card {
+        padding: 1.25rem 1rem;
+      }
+      form#commentForm {
+        padding: 1.25rem;
+      }
+      form#commentForm input,
+      form#commentForm textarea {
+        padding: 0.85rem 1rem;
+        font-size: 0.95rem;
+      }
+      form#commentForm button {
+        padding: 0.85rem 1.5rem;
+        font-size: 0.95rem;
+      }
+    }
+    
+    @media (min-width: 769px) and (max-width: 1024px) {
+      section.text-center h2 {
+        font-size: 2.2rem;
+      }
+      section.text-center p {
+        font-size: 1.2rem;
+      }
+    }
+    section.text-center button {
+      margin-top: 2rem;
+      background: #fad761;
+      color: black;
+      padding: 0.85rem 2.5rem;
+      border-radius: 20px;
+      font-weight: 800;
+      cursor: not-allowed;
+      opacity: 0.85;
+      user-select: none;
+      box-shadow: 0 4px 15px #f9d770;
+      border: none;
+    }
+
+    section.features {
+      margin-top: 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+      width: 100%;
+      color: #5a4d0e;
+    }
+    .feature-card {
+      background: #fff9e6;
+      padding: 1.8rem 1.5rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 28px rgba(250, 215, 97, 0.4);
+      font-weight: 700;
+      color: #5a4d0e;
+      transition: box-shadow 0.35s ease, transform 0.35s ease;
+      cursor: default;
+      user-select: none;
+    }
+    .feature-card:hover {
+      box-shadow: 0 16px 40px #f9d770;
+      transform: scale(1.07);
+    }
+    .feature-card h3 {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    section#comments {
+      margin-top: 7rem;
+      max-width: 700px;
+      width: 100%;
+    }
+    section#comments h3 {
+      text-align: center;
+      font-weight: 900;
+      font-size: 2rem;
+      color: #d97706;
+      margin-bottom: 2rem;
+      text-shadow: 1px 1px 3px #b06e00;
+      user-select: none;
+    }
+    form#commentForm {
+      background: #fff9e6;
+      padding: 1.8rem;
+      border-radius: 20px;
+      box-shadow: 0 14px 30px rgba(250, 215, 97, 0.5);
+      transition: box-shadow 0.3s ease;
+      user-select: none;
+    }
+    form#commentForm label {
+      font-weight: 700;
+      color: #5a4d0e;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    form#commentForm textarea {
+      width: 100%;
+      margin-bottom: 1.2rem;
+      padding: 1rem 1.2rem;
+      border: 2px solid #fad761;
+      border-radius: 16px;
+      outline-offset: 3px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    form#commentForm input:focus,
+    form#commentForm textarea:focus {
+      border-color: #e0b92a;
+    }
+    form#commentForm button {
+      background: #fad761;
+      color: black;
+      font-weight: 800;
+      padding: 1rem 2rem;
+      border-radius: 24px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      border: none;
+    }
+    form#commentForm button:hover {
+      background-color: #e0b92a;
+      box-shadow: 0 0 15px #e0b92a;
+    }
+
+    #commentsList {
+      margin-top: 2.5rem;
+      color: #5a4d0e;
+      font-weight: 700;
+      font-size: 1.1rem;
+      min-height: 60px;
+    }
+    #commentsList p {
+      text-align: center;
+      color: #a16207;
+      user-select: none;
+    }
+
+    footer {
+      background: #fad761;
+      color: black;
+      font-weight: 700;
+      padding: 1rem 0;
+      width: 100%;
+      text-align: center;
+      user-select: none;
+      box-shadow: 0 -6px 20px rgba(250, 215, 97, 0.4);
+      animation: fadeIn 1s ease forwards;
+      animation-delay: 1.2s;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .fade-in {
+      opacity: 0;
+      animation: fadeIn 1s ease-out forwards;
+    }
+    .fade-in:nth-child(1) { animation-delay: 0.1s; }
+    .fade-in:nth-child(2) { animation-delay: 0.3s; }
+    .fade-in:nth-child(3) { animation-delay: 0.6s; }
+    .fade-in:nth-child(4) { animation-delay: 0.9s; }
+
+  </style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <h1 class="site-title fade-in">My Mate</h1>
+
+    <div class="nav-buttons fade-in"></div>
+  </nav>
+</header>
+
+<main class="container">
+
+  <section class="text-center fade-in">
+    <h2>My Mate، همراه هوشمند و ساده شما برای ساخت و مدیریت لیست خرید روزانه</h2>
+    <p>
+      با My Mate به راحتی لیست خرید خود را بسازید، ویرایش کنید و حتی با دوستانتان به اشتراک بگذارید.  
+      این اپلیکیشن کاربرپسند، ساده و سریع طراحی شده تا مدیریت خریدهای روزانه‌ات رو راحت‌تر کنه.
+    </p>
+    <button disabled>به‌زودی منتشر می‌شود</button>
+  </section>
+
+  <section id="features" class="features fade-in">
+    <div class="feature-card">
+      <h3>ایجاد و ویرایش سریع لیست</h3>
+      <p>با چند کلیک ساده، لیست خرید خود را بسازید و در هر زمان تغییر دهید.</p>
+    </div>
+    <div class="feature-card">
+      <h3>اشتراک‌گذاری آسان</h3>
+      <p>لیست خرید خود را با دوستان و خانواده به اشتراک بگذارید و خرید گروهی را ساده کنید.</p>
+    </div>
+    <div class="feature-card">
+      <h3>کاهش بار ذهنی</h3>
+      <p>نیازی نیست همه‌چی یادت بمونه — My Mate برای همین ساخته شده!</p>
+    </div>
+  </section>
+
+  <section id="comments" class="fade-in">
+    <h3>نظرات کاربران</h3>
+
+    <form id="commentForm">
+      <label for="comment">نظر شما</label>
+      <textarea id="comment" name="comment" rows="5" required placeholder="نظر خود را اینجا بنویسید..."
+        aria-label="متن نظر" aria-describedby="commentError"></textarea>
+
+      <button type="submit" aria-label="ثبت نظر">ثبت نظر</button>
+      <p id="commentError" class="text-red-600 mt-2 text-center" style="display: none;" role="alert" aria-live="polite"></p>
+    </form>
+    <div id="loginPrompt" style="display: none; background: #fff9e6; padding: 1.5rem; border-radius: 20px; text-align: center; margin-top: 1rem;">
+      <p style="color: #5a4d0e; font-weight: 600; margin-bottom: 1rem;">برای ثبت نظر باید وارد شوید</p>
+      <a href="login.html" class="btn-auth" style="display: inline-block;">ورود</a>
+    </div>
+
+    <div id="commentsList" role="region" aria-label="لیست نظرات">
+      <p>نظری ثبت نشده است.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  © 2025 My Mate - همه حقوق محفوظ است.
+</footer>
+
+<script src="auth.js"></script>
+<script>
+  // Check authentication and update nav buttons
+  Auth.updateNavButtons();
+
+  // Load comments and handle form
+  const form = document.getElementById('commentForm');
+  const commentsList = document.getElementById('commentsList');
+  const commentError = document.getElementById('commentError');
+  const loginPrompt = document.getElementById('loginPrompt');
+  let currentUser = null;
+
+  // Check authentication and update UI
+  async function checkAuthAndUpdateUI() {
+    currentUser = await Auth.checkAuth();
+    
+    if (currentUser) {
+      // User is logged in - show form, hide login prompt
+      form.style.display = 'block';
+      loginPrompt.style.display = 'none';
+    } else {
+      // User is not logged in - hide form, show login prompt
+      form.style.display = 'none';
+      loginPrompt.style.display = 'block';
+    }
+  }
+
+  // Load comments from server
+  async function loadComments() {
+    try {
+      const res = await fetch('/api/comments', {
+        credentials: 'include',
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'خطا در ارتباط با سرور' }));
+        // Security: Use textContent to prevent XSS
+        commentsList.innerHTML = '';
+        const errorP = document.createElement('p');
+        errorP.style.color = '#dc2626';
+        errorP.textContent = errorData.error || 'خطا در بارگذاری نظرات.';
+        commentsList.appendChild(errorP);
+        return;
+      }
+      
+      const comments = await res.json();
+      
+      commentsList.innerHTML = '';
+      
+      if (!Array.isArray(comments)) {
+        // Security: Use textContent to prevent XSS
+        const errorP = document.createElement('p');
+        errorP.style.color = '#dc2626';
+        errorP.textContent = 'خطا در فرمت داده‌ها.';
+        commentsList.appendChild(errorP);
+        return;
+      }
+      
+      if (comments.length === 0) {
+        // Security: Use textContent to prevent XSS
+        const emptyP = document.createElement('p');
+        emptyP.textContent = 'نظری ثبت نشده است.';
+        commentsList.appendChild(emptyP);
+        return;
+      }
+      
+      comments.forEach(c => {
+        const commentItem = document.createElement('div');
+        commentItem.style.padding = '1rem';
+        commentItem.style.borderBottom = '1px solid #fad761';
+        commentItem.style.color = '#5a4d0e';
+        commentItem.style.marginBottom = '0.8rem';
+        commentItem.style.borderRadius = '8px';
+        commentItem.style.background = '#fff9e6';
+        
+        const username = document.createElement('div');
+        username.style.fontWeight = '700';
+        username.style.color = '#d97706';
+        username.style.marginBottom = '0.5rem';
+        // Security: Use textContent to prevent XSS
+        username.textContent = (c.username || 'کاربر ناشناس').substring(0, 50);
+        
+        const commentText = document.createElement('div');
+        commentText.style.fontWeight = '600';
+        commentText.style.lineHeight = '1.6';
+        // Security: Use textContent to prevent XSS attacks
+        commentText.textContent = c.comment;
+        
+        commentItem.appendChild(username);
+        commentItem.appendChild(commentText);
+        commentsList.appendChild(commentItem);
+      });
+    } catch (error) {
+      console.error('Error loading comments:', error);
+      // Security: Use textContent to prevent XSS
+      commentsList.innerHTML = '';
+      const errorP = document.createElement('p');
+      errorP.style.color = '#dc2626';
+      errorP.textContent = 'خطا در بارگذاری نظرات. لطفاً صفحه را رفرش کنید.';
+      commentsList.appendChild(errorP);
+    }
+  }
+
+  // Handle form submission
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    commentError.style.display = 'none';
+    
+    if (!currentUser) {
+      commentError.textContent = 'لطفاً ابتدا وارد شوید.';
+      commentError.style.display = 'block';
+      loginPrompt.style.display = 'block';
+      form.style.display = 'none';
+      return;
+    }
+    
+    const comment = form.comment.value.trim();
+    
+    if (!comment) {
+      commentError.textContent = 'لطفاً نظر خود را وارد کنید.';
+      commentError.style.display = 'block';
+      return;
+    }
+    
+    // UX: Show loading state
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'در حال ارسال...';
+    
+    try {
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ comment }),
+      });
+      
+      // Check if response is ok before trying to parse JSON
+      if (!res.ok) {
+        // Try to get error message from response
+        let errorMessage = 'خطا در ثبت نظر.';
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = `خطا ${res.status}: ${res.statusText || 'خطا در ثبت نظر'}`;
+        }
+        commentError.textContent = errorMessage;
+        commentError.style.display = 'block';
+        return;
+      }
+      
+      const data = await res.json();
+      
+      // Success - reload comments and reset form
+      form.reset();
+      await loadComments();
+      
+      // UX: Show success message briefly
+      const successMsg = document.createElement('p');
+      successMsg.className = 'text-green-600 mt-2 text-center';
+      successMsg.textContent = 'نظر شما با موفقیت ثبت شد!';
+      successMsg.style.display = 'block';
+      form.appendChild(successMsg);
+      setTimeout(() => {
+        successMsg.remove();
+      }, 3000);
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+      // More specific error message
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        commentError.textContent = 'ارتباط با سرور برقرار نشد. لطفاً اتصال اینترنت خود را بررسی کنید.';
+      } else {
+        commentError.textContent = `خطا: ${error.message || 'ارتباط با سرور برقرار نشد.'}`;
+      }
+      commentError.style.display = 'block';
+    } finally {
+      // UX: Restore button state
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+    }
+  });
+
+  // Initialize - always load comments, regardless of login status
+  loadComments();
+  checkAuthAndUpdateUI();
+</script>
+
+</body>
+</html>

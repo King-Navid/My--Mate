@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>پنل ادمین - My Mate</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background-color: #fef3c7;
+      margin: 0;
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+    }
+    #panel {
+      width: 100%;
+      max-width: 800px;
+      background: #fff9e6;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(250, 215, 97, 0.4);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    h1 {
+      color: #b9770e;
+      font-weight: 900;
+      font-size: 2.25rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      user-select: none;
+    }
+    #msgs, #comments {
+      max-height: 70vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .tab-content {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .block {
+      background: #fff3cd;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(250, 215, 97, 0.25);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    .block.unanswered {
+      border-color: #fad761;
+    }
+    .user-msg {
+      font-weight: 700;
+      color: #5a4d0e;
+      font-size: 1.125rem;
+      user-select: text;
+      word-break: break-word;
+    }
+    .user-msg .star {
+      color: #d97706;
+      margin-left: 0.5rem;
+      font-weight: 900;
+    }
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      resize: vertical;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      border: 2px solid #fad761;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 1rem;
+      outline-offset: 2px;
+      transition: box-shadow 0.3s;
+    }
+    textarea:focus {
+      box-shadow: 0 0 10px rgba(250, 215, 97, 0.7);
+      border-color: #e0b92a;
+      outline: none;
+    }
+    button.reply-btn {
+      align-self: flex-start;
+      background-color: #fad761;
+      color: black;
+      font-weight: 700;
+      padding: 0.6rem 1.5rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      user-select: none;
+      transition: background-color 0.3s;
+    }
+    button.reply-btn:hover {
+      background-color: #e0b92a;
+    }
+    .tab-btn {
+      background-color: #fff3cd;
+      color: #5a4d0e;
+      font-weight: 700;
+      padding: 0.75rem 1.5rem;
+      border: 2px solid #fad761;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      user-select: none;
+      transition: all 0.3s;
+      font-family: 'Vazirmatn', sans-serif;
+    }
+    .tab-btn:hover {
+      background-color: #fad761;
+      color: black;
+    }
+    .tab-btn.active {
+      background-color: #fad761;
+      color: black;
+      border-color: #e0b92a;
+    }
+    button.delete-btn {
+      background-color: #dc2626;
+      color: white;
+      font-weight: 700;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      user-select: none;
+      transition: background-color 0.3s;
+      font-family: 'Vazirmatn', sans-serif;
+    }
+    button.delete-btn:hover {
+      background-color: #b91c1c;
+    }
+    .comment-block {
+      background: #fff3cd;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(250, 215, 97, 0.25);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      border: 2px solid transparent;
+    }
+    .comment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .comment-username {
+      font-weight: 700;
+      color: #d97706;
+      font-size: 1.1rem;
+    }
+    .comment-text {
+      font-weight: 600;
+      color: #5a4d0e;
+      font-size: 1rem;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+    .comment-date {
+      font-size: 0.85rem;
+      color: #a16207;
+      margin-top: 0.25rem;
+    }
+    /* Scrollbar for messages container */
+    #msgs::-webkit-scrollbar {
+      width: 8px;
+    }
+    #msgs::-webkit-scrollbar-track {
+      background: #fff9e6;
+      border-radius: 10px;
+    }
+    #msgs::-webkit-scrollbar-thumb {
+      background-color: #fad761;
+      border-radius: 10px;
+      border: 2px solid #fff9e6;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem 0.75rem;
+      }
+      #panel {
+        padding: 1.5rem;
+        max-width: 100%;
+      }
+      h1 {
+        font-size: 1.75rem !important;
+        margin-bottom: 1.25rem !important;
+      }
+      #msgs {
+        max-height: 65vh;
+        gap: 1.25rem;
+      }
+      .block {
+        padding: 1rem 1.25rem;
+      }
+      .user-msg {
+        font-size: 1rem;
+      }
+      textarea {
+        min-height: 80px;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.95rem;
+      }
+      button.reply-btn {
+        padding: 0.5rem 1.25rem;
+        font-size: 0.95rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      body {
+        padding: 0.75rem 0.5rem;
+      }
+      #panel {
+        padding: 1.25rem;
+        border-radius: 12px;
+      }
+      h1 {
+        font-size: 1.5rem !important;
+        margin-bottom: 1rem !important;
+      }
+      #msgs {
+        max-height: 60vh;
+        gap: 1rem;
+      }
+      .block {
+        padding: 0.9rem 1rem;
+        border-radius: 10px;
+      }
+      .user-msg {
+        font-size: 0.95rem;
+      }
+      textarea {
+        min-height: 70px;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.9rem;
+      }
+      button.reply-btn {
+        padding: 0.45rem 1rem;
+        font-size: 0.9rem;
+        width: 100%;
+      }
+    }
+    
+    @media (min-width: 769px) and (max-width: 1024px) {
+      #panel {
+        max-width: 90%;
+      }
+    }
+    
+    @media (min-width: 1025px) {
+      #panel {
+        max-width: 900px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main id="panel">
+    <h1>پنل مدیریت My Mate</h1>
+
+    <div role="tablist" aria-label="تب‌های پنل مدیریت" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+      <button id="tabMessages" class="tab-btn active" onclick="showTab('messages')" role="tab" aria-controls="msgs" aria-selected="true">پیام‌های پشتیبانی</button>
+      <button id="tabComments" class="tab-btn" onclick="showTab('comments')" role="tab" aria-controls="comments" aria-selected="false">نظرات کاربران</button>
+    </div>
+
+    <section id="msgs" class="tab-content" role="tabpanel" aria-labelledby="tabMessages">
+      <p class="text-yellow-900 text-center">در حال بارگذاری پیام‌ها...</p>
+    </section>
+
+    <section id="comments" class="tab-content" style="display: none;" role="tabpanel" aria-labelledby="tabComments">
+      <p class="text-yellow-900 text-center">در حال بارگذاری نظرات...</p>
+    </section>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+    let currentAdmin = null;
+    // Check if user is admin, redirect to secret login if not
+    Auth.checkAuth().then(user => {
+      if (!user || !user.isAdmin) {
+        window.location.href = "/admin-login.html";
+        return;
+      }
+      currentAdmin = user;
+      load();
+    });
+
+    const messagesContainer = document.getElementById("msgs");
+    const commentsContainer = document.getElementById("comments");
+
+    function showTab(tab) {
+      // Update tab buttons
+      document.getElementById("tabMessages").classList.toggle("active", tab === "messages");
+      document.getElementById("tabComments").classList.toggle("active", tab === "comments");
+      
+      // Show/hide content
+      messagesContainer.style.display = tab === "messages" ? "flex" : "none";
+      commentsContainer.style.display = tab === "comments" ? "flex" : "none";
+      
+      // Load data if needed
+      if (tab === "comments") {
+        loadComments();
+      }
+    }
+
+    async function loadComments() {
+      try {
+        const res = await fetch("/api/comments", {
+          credentials: "include",
+        });
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = "/admin-login.html";
+          return;
+        }
+        const comments = await res.json();
+
+        if (!comments || comments.length === 0) {
+          // Security: Use textContent to prevent XSS
+          commentsContainer.innerHTML = '';
+          const emptyP = document.createElement('p');
+          emptyP.className = 'text-yellow-900 text-center';
+          emptyP.textContent = 'هیچ نظری وجود ندارد.';
+          commentsContainer.appendChild(emptyP);
+          return;
+        }
+
+        commentsContainer.innerHTML = "";
+        commentsContainer.style.flexDirection = "column";
+        commentsContainer.style.gap = "1.5rem";
+
+        for (const comment of comments) {
+          const block = document.createElement("div");
+          block.className = "comment-block";
+
+          // Header with username and delete button
+          const header = document.createElement("div");
+          header.className = "comment-header";
+
+          // Security: Use textContent to prevent XSS
+          const usernameDiv = document.createElement("div");
+          usernameDiv.className = "comment-username";
+          usernameDiv.textContent = (comment.username || "کاربر ناشناس").substring(0, 50);
+          header.appendChild(usernameDiv);
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "delete-btn";
+          deleteBtn.textContent = "حذف";
+          deleteBtn.setAttribute("aria-label", `حذف نظر ${comment.id}`);
+          deleteBtn.onclick = async () => {
+            if (!confirm(`آیا مطمئن هستید که می‌خواهید این نظر را حذف کنید؟`)) {
+              return;
+            }
+
+            deleteBtn.disabled = true;
+            deleteBtn.textContent = "در حال حذف...";
+
+            try {
+              const response = await fetch(`/api/comments/${comment.id}`, {
+                method: "DELETE",
+                credentials: "include",
+              });
+              const data = await response.json();
+              if (!response.ok) {
+                alert(data.error || "خطا در حذف نظر.");
+              } else {
+                loadComments();
+              }
+            } catch {
+              alert("خطا در حذف نظر.");
+            } finally {
+              deleteBtn.disabled = false;
+              deleteBtn.textContent = "حذف";
+            }
+          };
+          header.appendChild(deleteBtn);
+
+          block.appendChild(header);
+
+          // Comment text - Security: Use textContent to prevent XSS
+          const textDiv = document.createElement("div");
+          textDiv.className = "comment-text";
+          textDiv.textContent = comment.comment;
+          block.appendChild(textDiv);
+
+          // Date (if available)
+          if (comment.createdAt) {
+            const dateDiv = document.createElement("div");
+            dateDiv.className = "comment-date";
+            const date = new Date(comment.createdAt);
+            dateDiv.textContent = `تاریخ: ${date.toLocaleDateString('fa-IR')} ${date.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}`;
+            block.appendChild(dateDiv);
+          }
+
+          commentsContainer.appendChild(block);
+        }
+      } catch {
+        // Security: Use textContent to prevent XSS
+        commentsContainer.innerHTML = '';
+        const errorP = document.createElement('p');
+        errorP.className = 'text-red-600 text-center';
+        errorP.textContent = 'خطا در بارگذاری نظرات.';
+        commentsContainer.appendChild(errorP);
+      }
+    }
+
+    async function load() {
+      try {
+        const res = await fetch("/api/messages", {
+          credentials: "include",
+        });
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = "/admin-login.html";
+          return;
+        }
+        const arr = await res.json();
+
+        if (!arr.length) {
+          // Security: Use textContent to prevent XSS
+          messagesContainer.innerHTML = '';
+          const emptyP = document.createElement('p');
+          emptyP.className = 'text-yellow-900 text-center';
+          emptyP.textContent = 'هیچ پیامی وجود ندارد.';
+          messagesContainer.appendChild(emptyP);
+          return;
+        }
+
+        // Separate unanswered and answered messages
+        const unanswered = arr.filter(m => !m.adminReply);
+        const answered = arr.filter(m => m.adminReply);
+
+        // Put unanswered first
+        const sorted = [...unanswered, ...answered];
+        messagesContainer.innerHTML = '';
+
+        for (const m of sorted) {
+          const block = document.createElement("div");
+          block.className = "block" + (m.adminReply ? "" : " unanswered");
+
+          // User message header with star if unanswered
+          // Security: Use textContent to prevent XSS
+          const userMsg = document.createElement("p");
+          userMsg.className = "user-msg";
+          const safeUsername = m.username ? ` (${m.username.substring(0, 50)})` : "";
+          userMsg.textContent = `پیام کاربر${safeUsername}: ${m.userMessage}`;
+          if (!m.adminReply) {
+            const star = document.createElement("span");
+            star.className = "star";
+            star.textContent = "*";
+            userMsg.appendChild(star);
+          }
+          block.appendChild(userMsg);
+
+          // Reply textarea
+          const textarea = document.createElement("textarea");
+          textarea.value = m.adminReply || "";
+          textarea.placeholder = "پاسخ خود را اینجا بنویسید...";
+          textarea.setAttribute("aria-label", `پاسخ به پیام کاربر ${m.username || 'ناشناس'}`);
+          block.appendChild(textarea);
+
+          // Reply submit button
+          const btn = document.createElement("button");
+          btn.className = "reply-btn";
+          btn.textContent = "ثبت پاسخ";
+          btn.setAttribute("aria-label", `ثبت پاسخ به پیام ${m.id}`);
+          btn.onclick = async () => {
+            const reply = textarea.value.trim();
+            if (!reply) {
+              alert("لطفاً پاسخ را بنویسید.");
+              return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "در حال ارسال...";
+
+            try {
+              const response = await fetch("/api/messages/reply", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: m.id, reply }),
+              });
+              const data = await response.json();
+              if (!response.ok) {
+                alert(data.error || "خطا در ثبت پاسخ.");
+              } else {
+                load();
+              }
+            } catch {
+              alert("خطا در ارسال پاسخ.");
+            } finally {
+              btn.disabled = false;
+              btn.textContent = "ثبت پاسخ";
+            }
+          };
+          block.appendChild(btn);
+
+          messagesContainer.appendChild(block);
+        }
+      } catch {
+        // Security: Use textContent to prevent XSS
+        messagesContainer.innerHTML = '';
+        const errorP = document.createElement('p');
+        errorP.className = 'text-red-600 text-center';
+        errorP.textContent = 'خطا در بارگذاری پیام‌ها.';
+        messagesContainer.appendChild(errorP);
+      }
+    }
+
+    // Initial tab data will load once admin is verified
+  </script>
+
+</body>
+</html>
