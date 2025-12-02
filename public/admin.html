@@ -386,8 +386,8 @@
 
           const deleteBtn = document.createElement("button");
           deleteBtn.className = "delete-btn";
-          deleteBtn.textContent = "حذف";
-          deleteBtn.setAttribute("aria-label", `حذف نظر ${comment.id}`);
+          deleteBtn.textContent = "رد / حذف";
+          deleteBtn.setAttribute("aria-label", `رد یا حذف نظر ${comment.id}`);
           deleteBtn.onclick = async () => {
             if (!confirm(`آیا مطمئن هستید که می‌خواهید این نظر و پاسخ‌های آن را حذف کنید؟`)) {
               return;
@@ -503,7 +503,7 @@
               replyBox.appendChild(replyHeader);
               replyBox.appendChild(replyText);
 
-              // Approve button for pending replies
+              // Approve / reject buttons for pending replies
               if (!reply.approved) {
                 const approveReplyBtn = document.createElement("button");
                 approveReplyBtn.className = "reply-btn";
@@ -530,7 +530,45 @@
                     approveReplyBtn.textContent = "تأیید پاسخ";
                   }
                 };
-                replyBox.appendChild(approveReplyBtn);
+
+                const rejectReplyBtn = document.createElement("button");
+                rejectReplyBtn.className = "delete-btn";
+                rejectReplyBtn.textContent = "رد پاسخ";
+                rejectReplyBtn.style.marginTop = "0.4rem";
+                rejectReplyBtn.style.marginRight = "0.5rem";
+                rejectReplyBtn.onclick = async () => {
+                  if (!confirm("آیا از رد / حذف این پاسخ مطمئن هستید؟")) {
+                    return;
+                  }
+                  rejectReplyBtn.disabled = true;
+                  rejectReplyBtn.textContent = "در حال حذف...";
+                  try {
+                    const response = await fetch(`/api/comments/${reply.id}`, {
+                      method: "DELETE",
+                      credentials: "include",
+                    });
+                    const data = await response.json();
+                    if (!response.ok) {
+                      alert(data.error || "خطا در حذف پاسخ.");
+                    } else {
+                      loadComments();
+                    }
+                  } catch {
+                    alert("خطا در حذف پاسخ.");
+                  } finally {
+                    rejectReplyBtn.disabled = false;
+                    rejectReplyBtn.textContent = "رد پاسخ";
+                  }
+                };
+
+                const buttonsRow = document.createElement("div");
+                buttonsRow.style.display = "flex";
+                buttonsRow.style.gap = "0.5rem";
+                buttonsRow.style.marginTop = "0.4rem";
+                buttonsRow.appendChild(approveReplyBtn);
+                buttonsRow.appendChild(rejectReplyBtn);
+
+                replyBox.appendChild(buttonsRow);
               }
 
               repliesContainer.appendChild(replyBox);
