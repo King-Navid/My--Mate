@@ -362,33 +362,87 @@ app.post("/api/messages/reply", requireAdmin, async (req, res) => {
   }
 });
 
-// دریافت نظرات - accessible to everyone (no authentication required)
+// دریافت نظرات برای عموم - فقط نظرات تأیید شده
 app.get("/api/comments", async (req, res) => {
   try {
     const comments = await readJSON(commentsFile);
-    
-    // Ensure comments is an array
+
     if (!Array.isArray(comments)) {
-      // Log error but don't expose to client
       console.error("Comments file is not an array, returning empty array");
       return res.json([]);
     }
-    
-    // Return comments sorted by newest first (if there are any)
-    if (comments.length > 0) {
-      // Create a copy to avoid mutating the original array
-      const sortedComments = [...comments].sort((a, b) => (b.id || 0) - (a.id || 0));
-      // Removed console.log for production
+
+    // Only approved comments and replies are visible publicly
+    const approved = comments.filter(c => c.approved);
+
+    if (approved.length > 0) {
+      // Sort by creation time (newest first)
+      const sortedComments = [...approved].sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bTime - aTime;
+      });
       return res.json(sortedComments);
     }
-    
-    // Return empty array if no comments
+
     res.json([]);
   } catch (error) {
     console.error("Error loading comments:", error);
-    // Return empty array instead of error to prevent frontend issues
-    // This ensures comments section always works, even if file has issues
     res.json([]);
+  }
+});
+
+// مدیریت نظرات برای ادمین (همه نظرات، شامل تأیید نشده)
+app.get("/api/admin/comments", requireAdmin, async (req, res) => {
+  try {
+    const comments = await readJSON(commentsFile);
+
+    if (!Array.isArray(comments)) {
+      console.error("Comments file is not an array, returning empty array");
+      return res.json([]);
+    }
+
+    const sortedComments = [...comments].sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+
+    res.json(sortedComments);
+  } catch (error) {
+    console.error("Error loading admin comments:", error);
+    res.status(500).json({ error: "خطا در بارگذاری نظرات." });
+  }
+});
+
+// تأیید نظر توسط ادمین
+app.post("/api/admin/comments/:id/approve", requireAdmin, async (req, res) => {
+  try {
+    const commentId = parseInt(req.params.id, 10);
+    if (isNaN(commentId)) {
+      return res.status(400).json({ error: "شناسه نظر نامعتبر است." });
+    }
+
+    const comments = await readJSON(commentsFile);
+    if (!Array.isArray(comments)) {
+      return res.status(500).json({ error: "خطا در ساختار فایل نظرات." });
+    }
+
+    const comment = comments.find(c => c.id === commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "نظر مورد نظر پیدا نشد." });
+    }
+
+    if (comment.approved) {
+      return res.json({ message: "این نظر قبلاً تأیید شده است." });
+    }
+
+    comment.approved = true;
+    await writeJSON(commentsFile, comments);
+    res.json({ message: "نظر با موفقیت تأیید شد." });
+  } catch (error) {
+    console.error("Error approving comment:", error);
+    res.status(500).json({ error: "خطا در تأیید نظر." });
   }
 });
 
@@ -403,9 +457,11 @@ app.delete("/api/comments/:id", requireAdmin, async (req, res) => {
     
     const comments = await readJSON(commentsFile);
     
-    // Find and remove the comment
+    // Find and remove the comment and its replies
     const initialLength = comments.length;
-    const filteredComments = comments.filter(c => c.id !== commentId);
+    const filteredComments = comments.filter(
+      c => c.id !== commentId && c.parentId !== commentId
+    );
     
     if (filteredComments.length === initialLength) {
       return res.status(404).json({ error: "نظر مورد نظر پیدا نشد." });
@@ -423,7 +479,7 @@ app.delete("/api/comments/:id", requireAdmin, async (req, res) => {
 // ارسال نظر
 app.post("/api/comments", requireAuth, async (req, res) => {
   try {
-    const { comment } = req.body;
+    const { comment, parentId } = req.body;
     
     if (typeof comment !== "string" || comment.trim() === "") {
       return res.status(400).json({ error: "متن نظر نمی‌تواند خالی باشد." });
@@ -441,7 +497,18 @@ app.post("/api/comments", requireAuth, async (req, res) => {
     if (!userId || !username) {
       return res.status(401).json({ error: "لطفاً ابتدا وارد شوید." });
     }
-    
+
+    // Optional parentId for replies
+    let parentIdValue = null;
+    if (typeof parentId === "number") {
+      parentIdValue = parentId;
+    } else if (typeof parentId === "string" && parentId.trim() !== "") {
+      const parsed = parseInt(parentId, 10);
+      if (!isNaN(parsed)) {
+        parentIdValue = parsed;
+      }
+    }
+
     let comments = await readJSON(commentsFile);
     
     // Ensure comments is an array
@@ -457,6 +524,9 @@ app.post("/api/comments", requireAuth, async (req, res) => {
       username: username,
       comment: comment.trim(),
       createdAt: new Date().toISOString(),
+      parentId: parentIdValue,
+      approved: false,
+      authorRole: req.session.isAdmin ? "admin" : "user",
     };
     
     comments.push(newComment);
