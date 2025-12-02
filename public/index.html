@@ -564,6 +564,89 @@
           commentItem.appendChild(repliesContainer);
         }
 
+        // Reply form for logged-in users (normal users and admin)
+        if (currentUser) {
+          const replyForm = document.createElement('div');
+          replyForm.style.marginTop = '0.75rem';
+          replyForm.style.paddingTop = '0.5rem';
+          replyForm.style.borderTop = '1px dashed #fbbf24';
+
+          const replyLabel = document.createElement('div');
+          replyLabel.style.fontSize = '0.9rem';
+          replyLabel.style.marginBottom = '0.25rem';
+          replyLabel.textContent = 'پاسخ شما به این نظر:';
+
+          const replyTextarea = document.createElement('textarea');
+          replyTextarea.rows = 2;
+          replyTextarea.style.width = '100%';
+          replyTextarea.style.borderRadius = '8px';
+          replyTextarea.style.border = '1px solid #fad761';
+          replyTextarea.style.padding = '0.5rem 0.75rem';
+          replyTextarea.style.fontFamily = "'Vazirmatn', sans-serif";
+          replyTextarea.style.resize = 'vertical';
+
+          const replyButton = document.createElement('button');
+          replyButton.textContent = 'ارسال پاسخ';
+          replyButton.style.marginTop = '0.4rem';
+          replyButton.style.padding = '0.4rem 0.9rem';
+          replyButton.style.borderRadius = '999px';
+          replyButton.style.border = 'none';
+          replyButton.style.backgroundColor = '#facc15';
+          replyButton.style.cursor = 'pointer';
+          replyButton.style.fontWeight = '600';
+
+          const replyInfo = document.createElement('div');
+          replyInfo.style.fontSize = '0.8rem';
+          replyInfo.style.color = '#4b5563';
+          replyInfo.style.marginTop = '0.25rem';
+
+          replyButton.onclick = async () => {
+            const text = replyTextarea.value.trim();
+            if (!text) {
+              replyInfo.textContent = 'لطفاً متن پاسخ را وارد کنید.';
+              replyInfo.style.color = '#dc2626';
+              return;
+            }
+
+            replyButton.disabled = true;
+            const originalText = replyButton.textContent;
+            replyButton.textContent = 'در حال ارسال...';
+            replyInfo.textContent = '';
+
+            try {
+              const resReply = await fetch('/api/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ comment: text, parentId: root.id }),
+              });
+              const dataReply = await resReply.json().catch(() => ({ error: 'خطا در ارسال پاسخ' }));
+
+              if (!resReply.ok) {
+                replyInfo.textContent = dataReply.error || 'خطا در ارسال پاسخ.';
+                replyInfo.style.color = '#dc2626';
+                return;
+              }
+
+              replyTextarea.value = '';
+              replyInfo.textContent = 'پاسخ شما ثبت شد و پس از تأیید ادمین نمایش داده می‌شود.';
+              replyInfo.style.color = '#16a34a';
+            } catch (e) {
+              replyInfo.textContent = 'خطا در ارتباط با سرور.';
+              replyInfo.style.color = '#dc2626';
+            } finally {
+              replyButton.disabled = false;
+              replyButton.textContent = originalText;
+            }
+          };
+
+          replyForm.appendChild(replyLabel);
+          replyForm.appendChild(replyTextarea);
+          replyForm.appendChild(replyButton);
+          replyForm.appendChild(replyInfo);
+          commentItem.appendChild(replyForm);
+        }
+
         commentsList.appendChild(commentItem);
       });
     } catch (error) {
